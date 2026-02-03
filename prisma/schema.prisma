@@ -1,0 +1,231 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum ExpenseCategory {
+  FOOD
+  OFFERINGS_HONORARIUM
+  OFFERINGS_BRICK_LAYERS
+  OFFERINGS_SUNDAY
+  OFFERINGS_TUESDAY
+  TRANSPORT
+  COMMUNICATION_SMS
+  COMMUNICATION_CALLS
+  COMMUNICATION_BUNDLES
+  TITHES
+  OTHER_GIVING_BIRTHDAYS
+  OTHER_GIVING_FUNERALS
+  OTHER_GIVING_LUNCH
+  RENT
+  MISCELLANEOUS
+}
+
+enum SavingsType {
+  EMERGENCY
+  SINKING
+  LONG_TERM
+}
+
+enum IncomeCategory {
+  SALARY
+  BUSINESS
+  FREELANCE
+  INVESTMENTS
+  GIFTS
+  REFUNDS
+  SIDE_HUSTLE
+  RENTAL
+  BONUS
+  OTHER
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  SAVINGS_DEPOSIT
+  SAVINGS_WITHDRAWAL
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  password      String?   // Hashed password for credentials auth
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  expenses      Expense[]
+  incomes       Income[]
+  savings       Savings[]
+  transactions  Transaction[]
+  budgets       Budget[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  amount      Int             // Store as cents/smallest currency unit for precision
+  currency    String          @default("KES") // Kenyan Shillings as default
+  category    ExpenseCategory
+  description String?
+  date        DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([category])
+  @@map("expenses")
+}
+
+model Income {
+  id          String         @id @default(cuid())
+  amount      Int            // Store as cents/smallest currency unit for precision
+  currency    String         @default("KES")
+  category    IncomeCategory
+  source      String?        // e.g., "Company Name", "Client Name"
+  description String?
+  date        DateTime       @default(now())
+  isRecurring Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([category])
+  @@map("incomes")
+}
+
+model Savings {
+  id             String      @id @default(cuid())
+  name           String      // e.g., "Emergency Fund", "Vacation Fund"
+  type           SavingsType
+  goalAmount     Int         // Target amount in cents
+  amountSaved    Int         @default(0) // Current amount saved in cents
+  currency       String      @default("KES")
+  startDate      DateTime    @default(now())
+  targetDate     DateTime?   // Optional target date to reach goal
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deposits       SavingsDeposit[]
+
+  @@index([userId, type])
+  @@map("savings")
+}
+
+model SavingsDeposit {
+  id          String   @id @default(cuid())
+  amount      Int      // Amount deposited in cents
+  currency    String   @default("KES")
+  dateSaved   DateTime @default(now())
+  note        String?
+  createdAt   DateTime @default(now())
+  
+  savingsId   String
+  savings     Savings  @relation(fields: [savingsId], references: [id], onDelete: Cascade)
+
+  @@index([savingsId, dateSaved])
+  @@map("savings_deposits")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  type        TransactionType
+  amount      Int             // Amount in cents
+  currency    String          @default("KES")
+  description String?
+  category    String?         // Optional category for grouping
+  date        DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([type])
+  @@map("transactions")
+}
+
+model Budget {
+  id          String          @id @default(cuid())
+  category    ExpenseCategory
+  amount      Int             // Budget limit in cents
+  currency    String          @default("KES")
+  month       Int             // 1-12
+  year        Int
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, month, year])
+  @@index([userId, month, year])
+  @@map("budgets")
+}
