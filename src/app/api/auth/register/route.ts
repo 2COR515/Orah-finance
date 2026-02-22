@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
+import { createDefaultSubscription } from '@/lib/feature-gate';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,6 +37,9 @@ export async function POST(request: NextRequest) {
         name: name || email.split('@')[0],
       },
     });
+
+    // Create default FREE subscription with 7-day trial
+    await createDefaultSubscription(user.id);
 
     return NextResponse.json(
       {

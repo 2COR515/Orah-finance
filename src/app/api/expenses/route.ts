@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { checkResourceLimit } from '@/lib/feature-gate'
 
 export async function GET(request: Request) {
   try {
@@ -58,6 +59,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Missing required fields: amount, category' },
         { status: 400 }
+      )
+    }
+
+    // Check subscription limit for expenses
+    const limitCheck = await checkResourceLimit(session.user.id, 'expenses')
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: limitCheck.message, tier: limitCheck.tier, remaining: limitCheck.remaining },
+        { status: 403 }
       )
     }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { checkResourceLimit } from '@/lib/feature-gate';
 
 // GET /api/budgets - Get all budgets for a user
 export async function GET(request: NextRequest) {
@@ -40,6 +41,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { category, amount, month, year, currency = 'KES' } = await request.json();
+
+    // Check subscription limit for budgets
+    const limitCheck = await checkResourceLimit(session.user.id, 'budgets');
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: limitCheck.message, tier: limitCheck.tier, remaining: limitCheck.remaining },
+        { status: 403 }
+      );
+    }
 
     // Check if budget already exists for this category/month/year
     const existing = await prisma.budget.findUnique({

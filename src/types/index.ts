@@ -185,3 +185,48 @@ export interface PaginatedResponse<T> {
     totalPages: number
   }
 }
+
+// ==================== Subscription Types ====================
+
+export interface SubscriptionInfo {
+  tier: 'FREE' | 'BASIC' | 'MEDIUM' | 'PREMIUM'
+  status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED' | 'PAST_DUE' | 'TRIAL'
+  isActive: boolean
+  priceKES: number
+  startDate: Date | null
+  endDate: Date | null
+  trialEndsAt: Date | null
+  autoRenew: boolean
+  limits: {
+    maxExpensesPerMonth: number
+    maxIncomesPerMonth: number
+    maxSavingsGoals: number
+    maxBudgets: number
+    allowedSavingsTypes: string[]
+    maxCurrencies: number
+    transactionHistoryDays: number
+    canExportCSV: boolean
+    canExportPDF: boolean
+    canViewCharts: boolean
+    canViewTrends: boolean
+    canCustomCategories: boolean
+    canRecurringExpenses: boolean
+    canPushNotifications: boolean
+    canBudgetAlerts: boolean
+    canFinancialInsights: boolean
+    showAds: boolean
+    prioritySupport: boolean
+  }
+}
+
+export interface PaymentInfo {
+  id: string
+  amount: number
+  currency: string
+  method: 'MPESA' | 'GOOGLE_PLAY' | 'STRIPE'
+  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+  tier: 'BASIC' | 'MEDIUM' | 'PREMIUM'
+  transactionRef: string | null
+  paidAt: Date | null
+  createdAt: Date
+}

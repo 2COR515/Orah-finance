@@ -56,6 +56,34 @@ enum TransactionType {
   SAVINGS_WITHDRAWAL
 }
 
+enum SubscriptionTier {
+  FREE
+  BASIC
+  MEDIUM
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAST_DUE
+  TRIAL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  MPESA
+  GOOGLE_PLAY
+  STRIPE
+}
+
 // ==================== MODELS ====================
 
 model User {
@@ -75,6 +103,8 @@ model User {
   savings       Savings[]
   transactions  Transaction[]
   budgets       Budget[]
+  subscription  Subscription?
+  payments      Payment[]
 
   @@map("users")
 }
@@ -228,4 +258,54 @@ model Budget {
   @@unique([userId, category, month, year])
   @@index([userId, month, year])
   @@map("budgets")
+}
+
+// ==================== SUBSCRIPTION MODELS ====================
+
+model Subscription {
+  id                String             @id @default(cuid())
+  tier              SubscriptionTier   @default(FREE)
+  status            SubscriptionStatus @default(TRIAL)
+  priceKES          Int                @default(0)        // Price in KES (50, 100, 200)
+  startDate         DateTime           @default(now())
+  endDate           DateTime?                              // When the current period ends
+  trialEndsAt       DateTime?                              // 7-day free trial
+  cancelledAt       DateTime?
+  autoRenew         Boolean            @default(true)
+  googlePlayToken   String?                                // Google Play purchase token
+  mpesaReceiptNumber String?                               // M-Pesa receipt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  userId            String             @unique
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([endDate])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  amount            Int                                    // Amount in KES
+  currency          String        @default("KES")
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  tier              SubscriptionTier
+  transactionRef    String?       @unique                  // M-Pesa or Google Play ref
+  mpesaReceiptNumber String?
+  phoneNumber       String?                                // For M-Pesa
+  description       String?
+  metadata          Json?                                  // Extra payment data
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([transactionRef])
+  @@map("payments")
 }

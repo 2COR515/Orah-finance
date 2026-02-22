@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
+import { checkResourceLimit, checkFeatureAccess } from '@/lib/feature-gate'
+import { getTierLimits } from '@/lib/subscription'
 
 export async function GET(request: Request) {
   try {
@@ -49,6 +51,25 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Missing required fields: name, type, goalAmount' },
         { status: 400 }
+      )
+    }
+
+    // Check savings goal limit
+    const limitCheck = await checkResourceLimit(session.user.id, 'savings')
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: limitCheck.message, tier: limitCheck.tier, remaining: limitCheck.remaining },
+        { status: 403 }
+      )
+    }
+
+    // Check if savings type is allowed for this tier
+    const featureCheck = await checkFeatureAccess(session.user.id, 'allowedSavingsTypes')
+    const limits = getTierLimits(featureCheck.tier)
+    if (!limits.allowedSavingsTypes.includes(type)) {
+      return NextResponse.json(
+        { error: `${type} savings is not available on your ${featureCheck.tier} plan. Upgrade to access it.` },
+        { status: 403 }
       )
     }
 
