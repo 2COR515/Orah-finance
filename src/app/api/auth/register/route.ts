@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { createDefaultSubscription } from '@/lib/feature-gate';
+import { generateVerificationCode, sendVerificationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters long' },
         { status: 400 }
       );
     }
@@ -41,6 +50,23 @@ export async function POST(request: NextRequest) {
     // Create default FREE subscription with 7-day trial
     await createDefaultSubscription(user.id);
 
+    // Generate and send email verification code
+    const code = generateVerificationCode();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await prisma.emailVerification.create({
+      data: {
+        email,
+        code,
+        expiresAt,
+      },
+    });
+
+    // Send verification email (don't block registration if email fails)
+    sendVerificationEmail(email, code).catch((err) => {
+      console.error('Failed to send verification email during registration:', err);
+    });
+
     return NextResponse.json(
       {
         user: {
@@ -48,7 +74,8 @@ export async function POST(request: NextRequest) {
           email: user.email,
           name: user.name,
         },
-        message: 'User created successfully',
+        message: 'User created successfully. Please verify your email.',
+        requiresVerification: true,
       },
       { status: 201 }
     );

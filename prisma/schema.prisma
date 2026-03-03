@@ -93,6 +93,7 @@ model User {
   name          String?
   password      String?   // Hashed password for credentials auth
   image         String?
+  role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -146,6 +147,43 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ==================== EMAIL VERIFICATION & PASSWORD RESET ====================
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-digit code
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0) // Track failed attempts (max 5)
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
+  @@index([expiresAt])
+  @@map("email_verifications")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-digit code
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  attempts  Int      @default(0) // Track failed attempts (max 5)
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
+  @@index([expiresAt])
+  @@map("password_resets")
+}
+
+// ==================== ADMIN ====================
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Expense {
