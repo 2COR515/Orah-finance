@@ -2,19 +2,22 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths, format } from 'date-fns'
 import type { Expense, Savings, SavingsDeposit } from '@prisma/client'
+import { getSession } from '@/lib/api-auth'
 
 type SavingsWithDeposits = Savings & { deposits: SavingsDeposit[] }
 
 export async function GET(request: Request) {
   try {
+    const session = await getSession()
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
+    // Use authenticated user ID, or fall back to query param for backward compatibility
+    const userId = session?.user?.id || searchParams.get('userId')
     const period = searchParams.get('period') || 'month' // week, month, year
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
       )
     }
 
