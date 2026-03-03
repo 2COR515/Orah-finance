@@ -27,12 +27,20 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 
-interface Overview {
+interface OverviewStats {
   totalUsers: number
+  verifiedUsers: number
   activeSubscriptions: number
   totalRevenue: number
-  recentSignups: number
-  tierBreakdown: Record<string, number>
+  monthlyRevenue: number
+  monthlyPayments: number
+}
+
+interface OverviewData {
+  stats: OverviewStats
+  tierBreakdown: Array<{ tier: string; _count: number }>
+  recentPayments: any[]
+  recentUsers: any[]
 }
 
 interface UserItem {
@@ -51,7 +59,6 @@ interface UserItem {
     expenses: number
     incomes: number
     savings: number
-    budgets: number
   }
 }
 
@@ -76,7 +83,7 @@ export default function AdminPage() {
 
   const [tab, setTab] = useState<Tab>('overview')
   const [loading, setLoading] = useState(true)
-  const [overview, setOverview] = useState<Overview | null>(null)
+  const [overview, setOverview] = useState<OverviewData | null>(null)
   const [users, setUsers] = useState<UserItem[]>([])
   const [payments, setPayments] = useState<Payment[]>([])
   const [search, setSearch] = useState('')
@@ -120,8 +127,8 @@ export default function AdminPage() {
       const data = await res.json()
 
       if (tab === 'overview') setOverview(data)
-      if (tab === 'users') { setUsers(data.users); setTotalPages(data.pagination.pages) }
-      if (tab === 'payments') { setPayments(data.payments); setTotalPages(data.pagination.pages) }
+      if (tab === 'users') { setUsers(data.users); setTotalPages(data.pagination.totalPages) }
+      if (tab === 'payments') { setPayments(data.payments); setTotalPages(data.pagination.totalPages) }
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -260,10 +267,10 @@ export default function AdminPage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   {[
-                    { label: 'Total Users', value: overview.totalUsers, icon: Users, gradient: 'from-blue-500/20 to-indigo-500/20', border: 'border-blue-500/30', color: 'text-blue-400' },
-                    { label: 'Active Subscriptions', value: overview.activeSubscriptions, icon: Crown, gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/30', color: 'text-amber-400' },
-                    { label: 'Total Revenue', value: `KSh ${overview.totalRevenue.toLocaleString()}`, icon: DollarSign, gradient: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/30', color: 'text-emerald-400' },
-                    { label: 'New This Month', value: overview.recentSignups, icon: Activity, gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-500/30', color: 'text-violet-400' },
+                    { label: 'Total Users', value: overview.stats.totalUsers, icon: Users, gradient: 'from-blue-500/20 to-indigo-500/20', border: 'border-blue-500/30', color: 'text-blue-400' },
+                    { label: 'Active Subscriptions', value: overview.stats.activeSubscriptions, icon: Crown, gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/30', color: 'text-amber-400' },
+                    { label: 'Total Revenue', value: `KSh ${(overview.stats.totalRevenue || 0).toLocaleString()}`, icon: DollarSign, gradient: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/30', color: 'text-emerald-400' },
+                    { label: 'Verified Users', value: overview.stats.verifiedUsers, icon: Activity, gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-500/30', color: 'text-violet-400' },
                   ].map((stat) => (
                     <div key={stat.label} className="evervault-card rounded-xl p-5">
                       <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.gradient} border ${stat.border} flex items-center justify-center mb-3`}>
@@ -279,7 +286,7 @@ export default function AdminPage() {
                 <div className="evervault-card rounded-2xl p-6">
                   <h2 className="text-xl font-bold text-white mb-4">Subscription Tiers</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {Object.entries(overview.tierBreakdown).map(([tier, count]) => {
+                    {overview.tierBreakdown.map((item) => {
                       const colors: Record<string, string> = {
                         FREE: 'from-gray-500 to-gray-600',
                         BASIC: 'from-blue-500 to-indigo-500',
@@ -287,12 +294,12 @@ export default function AdminPage() {
                         PREMIUM: 'from-amber-500 to-orange-500',
                       }
                       return (
-                        <div key={tier} className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-xl">
-                          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[tier] || colors.FREE} flex items-center justify-center mb-2`}>
+                        <div key={item.tier} className="p-4 bg-white/[0.02] border border-white/[0.05] rounded-xl">
+                          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors[item.tier] || colors.FREE} flex items-center justify-center mb-2`}>
                             <Crown className="w-5 h-5 text-white" />
                           </div>
-                          <p className="text-xl font-bold text-white">{count}</p>
-                          <p className="text-sm text-gray-500">{tier}</p>
+                          <p className="text-xl font-bold text-white">{item._count}</p>
+                          <p className="text-sm text-gray-500">{item.tier}</p>
                         </div>
                       )
                     })}
@@ -347,7 +354,6 @@ export default function AdminPage() {
                               <span>📊 {user._count.expenses} expenses</span>
                               <span>💰 {user._count.incomes} incomes</span>
                               <span>🎯 {user._count.savings} savings</span>
-                              <span>📋 {user._count.budgets} budgets</span>
                             </div>
                           </div>
                         </div>
