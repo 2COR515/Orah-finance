@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/api-auth';
 
 async function isAdmin(): Promise<boolean> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) return false;
 
   const user = await prisma.user.findUnique({

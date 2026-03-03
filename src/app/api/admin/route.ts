@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/api-auth';
 
 /**
  * Middleware to check if user is admin
  */
 async function isAdmin(request: NextRequest): Promise<{ isAdmin: boolean; userId?: string }> {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     return { isAdmin: false };
   }

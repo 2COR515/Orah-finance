@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, format } from 'date-fns'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/api-auth'
 
 const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
   FOOD: 'Food',
@@ -23,7 +23,7 @@ const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
 
 export async function GET(request: Request) {
   try {
-    const session = await auth()
+    const session = await getSession()
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

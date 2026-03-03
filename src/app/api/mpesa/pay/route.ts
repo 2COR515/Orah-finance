@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { auth } from '@/lib/auth'
+import { getSession } from '@/lib/api-auth'
 import { NextResponse } from 'next/server'
 import { initiateSTKPush, formatPhoneNumber, isValidPhoneNumber } from '@/lib/mpesa'
 import { SUBSCRIPTION_TIERS, getSubscriptionEndDate } from '@/lib/subscription'
@@ -10,7 +10,7 @@ import { SUBSCRIPTION_TIERS, getSubscriptionEndDate } from '@/lib/subscription'
  */
 export async function POST(request: Request) {
   try {
-    const session = await auth()
+    const session = await getSession()
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
