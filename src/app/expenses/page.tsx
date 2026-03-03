@@ -128,9 +128,17 @@ export default function ExpensesPage() {
           description: '',
           date: new Date().toISOString().split('T')[0],
         });
+      } else {
+        const data = await response.json();
+        if (response.status === 403) {
+          alert(`⚡ Upgrade Required\n\n${data.error}\n\nCurrent plan: ${data.tier}`);
+        } else {
+          alert(data.error || 'Failed to add expense');
+        }
       }
     } catch (error) {
       console.error('Failed to add expense:', error);
+      alert('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

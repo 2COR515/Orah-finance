@@ -90,9 +90,14 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-300 mb-2">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-300">
+                  Password
+                </label>
+                <Link href="/auth/forgot-password" className="text-xs text-violet-400 hover:text-violet-300 font-semibold transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <input
                   id="password"
@@ -143,15 +148,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Demo credentials */}
-        <div className="mt-6 evervault-card rounded-xl p-5">
-          <p className="text-sm text-gray-400 text-center">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-emerald-400 font-semibold">Demo Account:</span>
-            <br />
-            <span className="text-gray-500">Email:</span> demo@orahfinance.com
-            <br />
-            <span className="text-gray-500">Password:</span> demo123
-          </p>
+        {/* App Info */}
+        <div className="mt-6 text-center text-gray-600 text-sm">
+          <p>OrahFinance — Smart Personal Finance</p>
         </div>
       </div>
     </div>

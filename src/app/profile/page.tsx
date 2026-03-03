@@ -15,7 +15,9 @@ import {
   Wallet,
   TrendingUp,
   PiggyBank,
-  Sparkles
+  Sparkles,
+  Crown,
+  ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -26,12 +28,21 @@ interface UserStats {
   totalTransactions: number
 }
 
+interface UserSubscription {
+  tier: string
+  status: string
+  isActive: boolean
+  endDate: string | null
+  priceKES: number
+}
+
 export default function ProfilePage() {
   const { data: session, status, update } = useSession()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState<UserStats | null>(null)
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -60,9 +71,22 @@ export default function ProfilePage() {
         console.error('Failed to fetch stats:', err)
       }
     }
+
+    const fetchSubscription = async () => {
+      try {
+        const res = await fetch('/api/subscription')
+        if (res.ok) {
+          const data = await res.json()
+          setSubscription(data.subscription)
+        }
+      } catch (err) {
+        console.error('Failed to fetch subscription:', err)
+      }
+    }
     
     if (session?.user) {
       fetchStats()
+      fetchSubscription()
     }
   }, [session])
 
@@ -214,6 +238,46 @@ export default function ProfilePage() {
             <p className="text-sm text-gray-500 font-medium">Transactions</p>
           </div>
         </div>
+
+        {/* Subscription Card */}
+        <Link href="/subscription" className="block mb-8 group">
+          <div className="evervault-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  subscription?.tier === 'PREMIUM' ? 'bg-gradient-to-br from-amber-500 to-orange-500' :
+                  subscription?.tier === 'MEDIUM' ? 'bg-gradient-to-br from-violet-500 to-purple-500' :
+                  subscription?.tier === 'BASIC' ? 'bg-gradient-to-br from-blue-500 to-indigo-500' :
+                  'bg-gradient-to-br from-gray-500 to-gray-600'
+                }`}>
+                  <Crown className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">
+                    {subscription?.tier || 'FREE'} Plan
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {subscription?.isActive
+                      ? subscription.tier === 'FREE'
+                        ? 'Upgrade to unlock more features'
+                        : `Active — KSh ${subscription.priceKES}/month`
+                      : 'Upgrade to unlock more features'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                  subscription?.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                  subscription?.status === 'TRIAL' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                  'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                }`}>
+                  {subscription?.status || 'FREE'}
+                </span>
+                <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+              </div>
+            </div>
+          </div>
+        </Link>
 
         {/* Profile Details */}
         <div className="evervault-card rounded-2xl p-8">

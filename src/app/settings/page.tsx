@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useCurrency } from '@/contexts/CurrencyContext'
-import { 
+import {
   ArrowLeft,
   Settings as SettingsIcon,
   Globe,
@@ -15,7 +15,9 @@ import {
   Moon,
   Sun,
   Smartphone,
-  Sparkles
+  Sparkles,
+  Crown,
+  ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -133,6 +135,24 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+
+        {/* Subscription */}
+        <Link href="/subscription" className="block mb-6 group">
+          <div className="evervault-card rounded-2xl p-6 hover:border-amber-500/30 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Subscription</h2>
+                  <p className="text-gray-500 text-sm">Manage your plan and billing</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            </div>
+          </div>
+        </Link>
 
         {/* Currency Settings */}
         <div className="evervault-card rounded-2xl p-6 mb-6">

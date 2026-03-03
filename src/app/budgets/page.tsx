@@ -144,9 +144,19 @@ export default function BudgetsPage() {
         await fetchData();
         setShowAddModal(false);
         setNewBudget({ category: 'FOOD', amount: '' });
+      } else {
+        const data = await response.json();
+        if (response.status === 403) {
+          alert(`⚡ Upgrade Required\n\n${data.error}\n\nCurrent plan: ${data.tier}\nPlease upgrade your subscription to add more budgets.`);
+        } else if (response.status === 409) {
+          alert(`Budget already exists for this category and period.`);
+        } else {
+          alert(data.error || 'Failed to add budget');
+        }
       }
     } catch (error) {
       console.error('Failed to add budget:', error);
+      alert('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

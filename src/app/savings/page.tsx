@@ -140,9 +140,17 @@ export default function SavingsPage() {
           goalAmount: '',
           targetDate: '',
         });
+      } else {
+        const data = await response.json();
+        if (response.status === 403) {
+          alert(`⚡ Upgrade Required\n\n${data.error}\n\nCurrent plan: ${data.tier}`);
+        } else {
+          alert(data.error || 'Failed to add savings goal');
+        }
       }
     } catch (error) {
       console.error('Failed to add savings:', error);
+      alert('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

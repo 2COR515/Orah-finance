@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Wallet, Bell, ChevronDown, LogOut, User, Settings, Sparkles } from 'lucide-react'
+import { Wallet, Bell, ChevronDown, LogOut, User, Settings, Sparkles, Crown, Shield } from 'lucide-react'
 import { CurrencySelector } from '@/components/ui/CurrencySelector'
 
 interface HeaderProps {
@@ -156,6 +156,18 @@ export function Header({ timePeriod, onTimePeriodChange }: HeaderProps) {
                   <button 
                     onClick={() => {
                       setShowUserMenu(false)
+                      router.push('/subscription')
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition-all duration-200"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                      <Crown className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <span className="font-medium">Subscription</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowUserMenu(false)
                       router.push('/settings')
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition-all duration-200"
@@ -165,6 +177,20 @@ export function Header({ timePeriod, onTimePeriodChange }: HeaderProps) {
                     </div>
                     <span className="font-medium">Settings</span>
                   </button>
+                  {(session?.user as any)?.role === 'ADMIN' && (
+                    <button 
+                      onClick={() => {
+                        setShowUserMenu(false)
+                        router.push('/admin')
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-white/[0.05] hover:text-white transition-all duration-200"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center">
+                        <Shield className="w-4 h-4 text-rose-400" />
+                      </div>
+                      <span className="font-medium">Admin Panel</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="border-t border-white/[0.08] py-1">

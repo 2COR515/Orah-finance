@@ -11,12 +11,16 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages (except verify-email)
   if (isAuthPage && isLoggedIn) {
+    // Allow verify-email page even when logged in
+    if (req.nextUrl.pathname.startsWith('/auth/verify-email')) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  // Protect all other routes
+  // Protect all other routes (except auth pages)
   if (!isAuthPage && !isLoggedIn) {
     const callbackUrl = encodeURIComponent(req.nextUrl.pathname);
     return NextResponse.redirect(new URL(`/auth/login?callbackUrl=${callbackUrl}`, req.url));

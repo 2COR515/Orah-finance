@@ -68,6 +68,12 @@ export default function RegisterPage() {
         return;
       }
 
+      // If email verification is required, redirect to verify page
+      if (data.requiresVerification) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(formData.email)}`);
+        return;
+      }
+
       // Auto sign in after registration
       const result = await signIn('credentials', {
         email: formData.email,

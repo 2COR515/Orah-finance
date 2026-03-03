@@ -117,9 +117,17 @@ export default function IncomePage() {
           isRecurring: false,
         });
         fetchIncomes();
+      } else {
+        const data = await res.json();
+        if (res.status === 403) {
+          alert(`⚡ Upgrade Required\n\n${data.error}\n\nCurrent plan: ${data.tier}`);
+        } else {
+          alert(data.error || 'Failed to add income');
+        }
       }
     } catch (error) {
       console.error('Failed to add income:', error);
+      alert('Network error. Please try again.');
     } finally {
       setSubmitting(false);
     }
